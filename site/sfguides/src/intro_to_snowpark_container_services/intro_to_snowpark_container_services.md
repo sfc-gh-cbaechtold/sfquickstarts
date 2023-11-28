@@ -213,7 +213,7 @@ ENTRYPOINT ["jupyter", "notebook","--allow-root","--ip=0.0.0.0","--port=8888","-
 This is just a normal Dockerfile, where we install some packages, change our working directory, expose a port, and then launch our notebook service. There's nothing unique to Snowpark Container Services here! Let's build and test the image locally from the terminal. **Note it is a best practice to tag your local images with a `local_repository` prefix that is comprised of your first initial and last name, e.g. `jsmith/my-image:latest`. Navigate to your local clone of `.../spcs-101-quickstart/src/jupyter-snowpark` and run a Docker build command:
 ```bash
 cd .../spcs-101-quickstart/src/jupyter-snowpark
-docker build --platform=linux/amd64 -t <local_repository>/python-jupyter-snowpark:latest
+docker build --platform=linux/amd64 -t <local_repository>/python-jupyter-snowpark:latest .
 ```
 Verify the image built successfully:
 ```bash
@@ -266,7 +266,7 @@ spec:
 **Update the <repository_hostname> for your image** and save the file. Now that the spec file is updated, we need to push it to our Snowflake Stage so that we can reference it next in our `create service` statement. We will use snowcli to push the yaml file. From the terminal:
 ```bash
 cd .../spcs-101-quickstart/src/jupyter-snowpark
-snow stage put ./jupyter-snowpark.yaml specs --overwrite --connection spcs_hol
+snow object stage copy ./jupyter-snowpark.yaml @specs --overwrite --connection spcs_hol
 ```
 You can verify that your yaml was pushed successfully by running the following SQL using the Snowflake VSCode Extension or a SQL worksheet and verifying that the file is listed:
 ```sql
@@ -364,7 +364,7 @@ The only thing unique to Snowflake about this container, is that the REST API co
 Let's build and test the image locally from the terminal. **Note it is a best practice to tag your local images with a `local_repository` prefix that is comprised of your first initial and last name, e.g. `jsmith/my-image:latest`. Navigate to your local clone of `.../spcs-101-quickstart/src/convert-api` and run a Docker build command:
 ```bash
 cd .../spcs-101-quickstart/src/convert-api
-docker build --platform=linux/amd64 -t <local_repository>/convert-api:latest
+docker build --platform=linux/amd64 -t <local_repository>/convert-api:latest .
 ```
 Verify the image built successfully:
 ```bash
@@ -372,7 +372,7 @@ docker image list
 ```
 Now that our local image has built, let's validate that it runs successfully. From a terminal run:
 ```bash
-docker run -d -p 90980:9090 <local_repository>/convert-api:latest
+docker run -d -p 9090:9090 <local_repository>/convert-api:latest
 ```
 Test our local container endpoint by running the following from a different terminal window:
 ```bash
@@ -420,7 +420,7 @@ spec:
 **Update the `<repository_hostname>` for your image** and save the file. Now that the spec file is updated, we need to push it to our Snowflake Stage so that we can reference it next in our `create service` statement. We will use snowcli to push the yaml file. From the terminal:
 ```bash
 cd .../spcs-101-quickstart/src/convert-api
-snow stage put ./convert-api.yaml specs --overwrite --connection spcs_hol
+snow object stage copy ./convert-api.yaml @specs --overwrite --connection spcs_hol
 ```
 You can verify that your yaml was pushed successfully by running the following SQL using the Snowflake VSCode Extension or a SQL worksheet and verifying that the file is listed:
 ```sql
@@ -524,8 +524,9 @@ Duration: 2
 
 If you no longer need the services and compute pool up and running, we can stop the services and suspend the compute pool so that we don't incur any cost (Snowpark Container Services bill credits/second based on the compute pool's uptime, similar to Virtual Warehouse billing):
 ```sql
-ALTER COMPUTE POOL SPCS_HOL_POOL STOP ALL SERVICES;
-ALTER COMPUTE POOL SPCS_HOL_POOL SUSPEND
+USE ROLE SPCS_USER_ROLE;
+ALTER COMPUTE POOL SPCS_HOL_POOL STOP ALL;
+ALTER COMPUTE POOL SPCS_HOL_POOL SUSPEND;
 ```
 
 <!-- ------------------------ -->
