@@ -17,13 +17,13 @@ Through this quickstart guide, you will explore Snowpark Container Services. You
 
 ![Snowpark Container Service](./assets/spcs.webp)
 
-Snowpark Container Services (SPCS) is a fully managed container offering that allows you to easily deploy, manage, and scale containerized services, jobs, and functions, all within the security and governance boundaries of Snowflake, and requiring zero data movement. As a fully managed service, SPCS comes with Snowflake’s native security, RBAC support, and built-in configuration and operational best-practices.
+Snowpark Container Services is a fully managed container offering that allows you to easily deploy, manage, and scale containerized services, jobs, and functions, all within the security and governance boundaries of Snowflake, and requiring zero data movement. As a fully managed service, SPCS comes with Snowflake’s native security, RBAC support, and built-in configuration and operational best-practices.
 
-SPCSs are fully integrated with both Snowflake features and third-party tools, such as Snowflake Virtual Warehouses and Docker, allowing teams to focus on building data applications, and not building or managing infrastructure. Just like all things Snowflake, this managed service allows you to run and scale your container workloads across regions and clouds without the additional complexity of managing a control plane, worker nodes, and also while having quick and easy access to your Snowflake data.
+Snowpark Container Services are fully integrated with both Snowflake features and third-party tools, such as Snowflake Virtual Warehouses and Docker, allowing teams to focus on building data applications, and not building or managing infrastructure. Just like all things Snowflake, this managed service allows you to run and scale your container workloads across regions and clouds without the additional complexity of managing a control plane, worker nodes, and also while having quick and easy access to your Snowflake data.
 
-How are customers and partners using SPCS today? Containerized services on Snowflake open up the opportunity to host and run long-running services, like front-end web applications, all natively within your Snowflake environment. Customers are now running GPU-enabled machine learning and AI workloads, such as GPU-accelerated model training and open-source Large Language Models (LLMs) as jobs and as service functions, including fine-tuning of these LLMs on your own Snowflake data, without having to move the data to external compute infrastructure. Snowpark Container Services are an excellent path for deploying applications and services that are tightly coupled to the Data Cloud.
+How are customers and partners using Snowpark Container Services today? Containerized services on Snowflake open up the opportunity to host and run long-running services, like front-end web applications, all natively within your Snowflake environment. Customers are now running GPU-enabled machine learning and AI workloads, such as GPU-accelerated model training and open-source Large Language Models (LLMs) as jobs and as service functions, including fine-tuning of these LLMs on your own Snowflake data, without having to move the data to external compute infrastructure. Snowpark Container Services are an excellent path for deploying applications and services that are tightly coupled to the Data Cloud.
 
-The introduction of SPCS on Snowflake includes the incorporation of new object types and constructs to the Snowflake platform, namely: images, image registry, image repositories, compute pools, specification files, services, and jobs.
+The introduction of Snowpark Container Services on Snowflake includes the incorporation of new object types and constructs to the Snowflake platform, namely: images, image registry, image repositories, compute pools, specification files, services, and jobs.
 
 For more information on these objects, check out [this article](https://medium.com/snowflake/snowpark-container-services-a-tech-primer-99ff2ca8e741) along with the Snowpark Container Services [documentation]().
 
@@ -33,17 +33,18 @@ For more information on these objects, check out [this article](https://medium.c
 - How to deploy a Service Function to perform basic calculations
 
 ### Prerequisites
-- [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) installed
-    >**Download the git repo here: https://github.com/sfc-gh-cbaechtold/spcs-101-quickstart.git**
+
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed
 - [Python 3.10](https://www.python.org/downloads/) installed
     - Note that you will be creating a Python environment with 3.10 in the **Setup the Local Environment** step
+- (Optional) [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) installed
+    >**Download the git repo here: https://github.com/sfc-gh-cbaechtold/spcs-101-quickstart.git**. You can simply doownload the repo as a .zip if you don't have Git installed locally.
 - (Optional) [VSCode](https://code.visualstudio.com/) (recommended) with the [Docker](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-docker), [Python](https://marketplace.visualstudio.com/items?itemName=ms-python.python), and [Snowflake](https://marketplace.visualstudio.com/items?itemName=snowflake.snowflake-vsc) extensions installed.
-- A Snowflake account. If you do not have a Snowflake account, you can register for a [free trial account](https://signup.snowflake.com/).
+- A Snowflake account in a supported [AWS region](). If you do not have a Snowflake account, you can register for a [free trial account](https://signup.snowflake.com/). **Make sure to select AWS US West as your cloud region for your trial account.**
 - A Snowflake account login with a role that has the `ACCOUNTADMIN` role. If not, you will need to register for a free trial or work with your `ACCOUNTADMIN` to perform the account setup.
 
 ### What You’ll Build 
-- A hosted Jupyter Notebook service running inside of Snowpark Container Services
+- A hosted Jupyter Notebook service running inside of Snowpark Container Services with a basic notebook
 - A Python REST API to perform basic temperature conversions
 - A Snowflake Service Function that leverages the REST API
 
@@ -63,11 +64,11 @@ GRANT CREATE WAREHOUSE ON ACCOUNT TO ROLE SPCS_USER_ROLE;
 GRANT CREATE COMPUTE POOL ON ACCOUNT TO ROLE SPCS_USER_ROLE;
 GRANT CREATE INTEGRATION ON ACCOUNT TO ROLE SPCS_USER_ROLE;
 GRANT MONITOR USAGE ON ACCOUNT TO  ROLE  SPCS_USER_ROLE;
+GRANT BIND SERVICE ENDPOINT ON ACCOUNT TO ROLE SPCS_USER_ROLE;
 GRANT IMPORTED PRIVILEGES ON DATABASE snowflake TO ROLE SPCS_USER_ROLE;
 
-// Grant SPCS_USER_ROLE to current user
-set USERNAME = current_user();
-grant role SPCS_USER_ROLE to user identifier($username);
+// Grant SPCS_USER_ROLE to ACCOUNTADMIN
+grant role SPCS_USER_ROLE to role ACCOUNTADMIN;
 
 // Create Database, Warehouse, and Image spec stage
 USE ROLE SPCS_USER_ROLE;
@@ -134,9 +135,12 @@ Duration: 10
 
   4. Install SnowCLI:
   ```bash
-  # the following is a 3 step command that should work for Macs
-  # cd :: Downloads; git clone; cd :: snowcli
-  cd ~/Downloads && git clone https://github.com/Snowflake-Labs/snowcli && cd snowcli
+  # naviage to where you want to download the snowcli GitHub repo, e.g. ~/Downloads
+  cd /your/preferred/path
+  # clone the git repo
+  git clone https://github.com/Snowflake-Labs/snowcli
+  # cd into the snowcli repo
+  cd snowcli
   # install
   hatch build && pip install .
   # during install you may observe some dependency errors, which should be okay for the time being 
@@ -210,7 +214,9 @@ EXPOSE 8888
 #launch jupyter notebook server. NOTE!  ENTRYPOINT ( or CMD )intrscutions run each time a container is launched!
 ENTRYPOINT ["jupyter", "notebook","--allow-root","--ip=0.0.0.0","--port=8888","--no-browser" , "--NotebookApp.token=''", "--NotebookApp.password=''"] 
 ```
-This is just a normal Dockerfile, where we install some packages, change our working directory, expose a port, and then launch our notebook service. There's nothing unique to Snowpark Container Services here! Let's build and test the image locally from the terminal. **Note it is a best practice to tag your local images with a `local_repository` prefix that is comprised of your first initial and last name, e.g. `jsmith/my-image:latest`. Navigate to your local clone of `.../spcs-101-quickstart/src/jupyter-snowpark` and run a Docker build command:
+This is just a normal Dockerfile, where we install some packages, change our working directory, expose a port, and then launch our notebook service. There's nothing unique to Snowpark Container Services here! 
+
+Let's build and test the image locally from the terminal. **Note it is a best practice to tag your local images with a `local_repository` prefix. Often, users will set this to a combination of first initial and last name,, e.g. `jsmith/my-image:latest`. Navigate to your local clone of `.../spcs-101-quickstart/src/jupyter-snowpark` and run a Docker build command:
 ```bash
 cd .../spcs-101-quickstart/src/jupyter-snowpark
 docker build --platform=linux/amd64 -t <local_repository>/python-jupyter-snowpark:latest .
@@ -289,7 +295,7 @@ Since we specified that the `jupyter-snowpark` endpoint running on port `8888` w
 ```sql
 SHOW ENDPOINTS IN SERVICE JUPYTER_SNOWPARK_SERVICE;
 ```
-Copy the `jupyter-snowpark` endpoint URL, and paste it in your browser. You will be asked to login to Snowflake via your username and password, after which you should successfully see your Jupyterlab instance running, all inside of Snowflake!
+Copy the `jupyter-snowpark` endpoint URL, and paste it in your browser. You will be asked to login to Snowflake via your username and password, after which you should successfully see your Jupyterlab instance running, all inside of Snowflake! **Note, to access the service the user logging in must have the `SPCS_USER_ROLE` AND their default role cannot be `ACCOUNTADMIN`, `SECURITYADMIN`, or `ORGADMIN`.**
 
 <!-- ------------------------ -->
 ## Build, Push, and Run the Temperature Conversion REST API Service
@@ -361,7 +367,7 @@ if __name__ == '__main__':
 
 The only thing unique to Snowflake about this container, is that the REST API code expects to receive requests in the format that [Snowflake External Function](https://docs.snowflake.com/en/sql-reference/external-functions-data-format#body-format) calls are packaged, and must also package the response in the expected format so that we can use it as a Service Function. **Note this is only required if you intend to interact with the API via a SQL function**.
 
-Let's build and test the image locally from the terminal. **Note it is a best practice to tag your local images with a `local_repository` prefix that is comprised of your first initial and last name, e.g. `jsmith/my-image:latest`. Navigate to your local clone of `.../spcs-101-quickstart/src/convert-api` and run a Docker build command:
+Let's build and test the image locally from the terminal. **Note it is a best practice to tag your local images with a `local_repository` prefix. Often, users will set this to a combination of first initial and last name, e.g. `jsmith/my-image:latest`. Navigate to your local clone of `.../spcs-101-quickstart/src/convert-api` and run a Docker build command:
 ```bash
 cd .../spcs-101-quickstart/src/convert-api
 docker build --platform=linux/amd64 -t <local_repository>/convert-api:latest .
@@ -378,7 +384,10 @@ Test our local container endpoint by running the following from a different term
 ```bash
 curl -X POST -H "Content-Type: application/json" -d '{"data": [[0, 12],[1,19],[2,18],[3,23]]}' http://localhost:9090/convert
 ```
-You should recieve back a JSON object, this will conatin the batch id and then the converted value in Fahrenheit
+You should recieve back a JSON object, this will conatin the batch id and then the converted value in Fahrenheit:
+```bash
+{"data":[[0,53.6],[1,66.2],[2,64.4],[3,73.4]]}
+```
 
 ### Tag and Push the Image
 Now that we have a local version of our container working, we need to push it to Snowflake so that a Service can access the image. To do this we will create a new tag of the image that points at our image repository in our Snowflake account, and then push said tagged image. From a terminal, run the following:
@@ -414,8 +423,6 @@ spec:
     - name: convert-api
       port: 9090
       public: true
-  networkPolicyConfig:
-      allowInternetEgress: true
 ```
 **Update the `<repository_hostname>` for your image** and save the file. Now that the spec file is updated, we need to push it to our Snowflake Stage so that we can reference it next in our `create service` statement. We will use snowcli to push the yaml file. From the terminal:
 ```bash
@@ -499,7 +506,7 @@ There are a number of useful functions we should explore with respect to control
     From a SQl console:
 
     ```sql
-    CALL SYSTEM$GET_SERVICE_STATUS('<database_name>.PUBLIC.JUPYTER_SNOWPARK_SERVICE');
+    CALL SYSTEM$GET_SERVICE_STATUS('SPCS_HOL_DB.PUBLIC.JUPYTER_SNOWPARK_SERVICE');
     ```
 
 2. Check the status of the logs with :
@@ -507,7 +514,7 @@ There are a number of useful functions we should explore with respect to control
     From a SQl console:
 
     ```sql
-    CALL SYSTEM$GET_SERVICE_LOGS('<database_name>.PUBLIC.JUPYTER_SNOWPARK_SERVICE', '0', 'jupyter-snowpark',10);
+    CALL SYSTEM$GET_SERVICE_LOGS('SPCS_HOL_DB.PUBLIC.JUPYTER_SNOWPARK_SERVICE', '0', 'jupyter-snowpark',10);
     ```
 
 3. Suspend your container using the ALTER SERVICE command
@@ -515,8 +522,16 @@ There are a number of useful functions we should explore with respect to control
     From a SQL console:
 
     ```sql
-    ALTER SERVICE <database_name>.PUBLIC.JUPYTER_SNOWPARK_SERVICE SUSPEND ;
+    ALTER SERVICE SPCS_HOL_DB.PUBLIC.JUPYTER_SNOWPARK_SERVICE SUSPEND ;
     ```
+
+4. Resume your container using the ALTER SERVICE command
+
+  From a SQL console:
+
+  ```sql
+  ALTER SERVICE SPCS_HOL_DB.PUBLIC.JUPYTER_SNOWPARK_SERVICE RESUME ;
+  ```
 
 <!-- ------------------------ -->
 ## Stop the Services and Suspend the Compute Pool
