@@ -183,10 +183,11 @@ Duration: 10
   docker login <snowflake_registry_hostname> -u <user_name>
   > prompt for password
   ```
+  **Note the difference between `REPOSITORY_URL` (`org-account.registry.snowflakecomputing.com/spcs_hol_db/public/image_repo`) and `SNOWFLAKE_REGISTRY_HOSTNAME` (`org-account.registry.snowflakecomputing.com`)**
 
 <!-- ------------------------ -->
 ## Build, Push, and Run the Jupyter Service
-Duration: 30
+Duration: 45
 
 ### Build and Test the Image Locally
 
@@ -229,7 +230,7 @@ Now that our local image has built, let's validate that it runs successfully. Fr
 ```bash
 docker run -d -p 8888:8888 <local_repository>/python-jupyter-snowpark:latest
 ```
-Open up a browser and navigate to [localhost:8888/lab](http://localhost:8888/lab) to verify your notebook service is working locally. Once you've verified that the service is working, you can stop the container.
+Open up a browser and navigate to [localhost:8888/lab](http://localhost:8888/lab) to verify your notebook service is working locally. Once you've verified that the service is working, you can stop the container: `docker stop python-jupyter-snowpark`.
 
 ### Tag and Push the Image
 Now that we have a local version of our container working, we need to push it to Snowflake so that a Service can access the image. To do this we will create a new tag of the image that points at our image repository in our Snowflake account, and then push said tagged image. From a terminal, run the following:
@@ -239,6 +240,8 @@ Now that we have a local version of our container working, we need to push it to
   > prompt for password
   docker tag <local_repository>/python-jupyter-snowpark:latest <repository_url>/python-jupyter-snowpark:dev
 ```
+**Note the difference between `REPOSITORY_URL` (`org-account.registry.snowflakecomputing.com/spcs_hol_db/public/image_repo`) and `SNOWFLAKE_REGISTRY_HOSTNAME` (`org-account.registry.snowflakecomputing.com`)**
+
 Verify that the new tagged image exists by running:
 ```bash
 docker image list
@@ -252,7 +255,7 @@ This may take some time, so you can move on to the next step **Configure and Pus
 USE ROLE SPCS_USER_ROLE;
 CALL SYSTEM$REGISTRY_LIST_IMAGES('/SPCS_HOL_DB/PUBLIC/IMAGE_REPO');
 ```
-You should see your `python-jupyter-snowpark:dev` image listed.
+You should see your `python-jupyter-snowpark` image listed.
 
 ### Configure and Push the Spec YAML
 Services in Snowpark Container Services are defined using YAML files. These YAML files configure all of the various parameters, etc. needed to run the containers within your Snowflake account. These YAMLs support a [large number of configurable parameter](), although we will not reference all of them here. Navigate to your local clone of `.../spcs-101-quickstart/src/jupyter-snowpark/jupyter-snowpark.yaml`, which should look like this:
@@ -388,6 +391,7 @@ You should recieve back a JSON object, this will conatin the batch id and then t
 ```bash
 {"data":[[0,53.6],[1,66.2],[2,64.4],[3,73.4]]}
 ```
+Once you've verified that the service is working, you can stop the container: `docker stop convert-api`.
 
 ### Tag and Push the Image
 Now that we have a local version of our container working, we need to push it to Snowflake so that a Service can access the image. To do this we will create a new tag of the image that points at our image repository in our Snowflake account, and then push said tagged image. From a terminal, run the following:
@@ -397,6 +401,8 @@ Now that we have a local version of our container working, we need to push it to
   > prompt for password
   docker tag <local_repository>/convert-api:latest <repository_url>/convert-api:dev
 ```
+**Note the difference between `REPOSITORY_URL` (`org-account.registry.snowflakecomputing.com/spcs_hol_db/public/image_repo`) and `SNOWFLAKE_REGISTRY_HOSTNAME` (`org-account.registry.snowflakecomputing.com`)**
+
 Verify that the new tagged image exists by running:
 ```bash
 docker image list
@@ -410,7 +416,7 @@ This may take some time, so you can move on to the next step **Configure and Pus
 USE ROLE SPCS_USER_ROLE;
 CALL SYSTEM$REGISTRY_LIST_IMAGES('/SPCS_HOL_DB/PUBLIC/IMAGE_REPO');
 ```
-You should see your `convert-api:dev` image listed.
+You should see your `convert-api` image listed.
 
 ### Configure and Push the Spec YAML
 Services in Snowpark Container Services are defined using YAML files. These YAML files configure all of the various parameters, etc. needed to run the containers within your Snowflake account. These YAMLs support a [large number of configurable parameter](), although we will not reference all of them here. Navigate to your local clone of `.../spcs-101-quickstart/src/convert-api/convert-api.yaml`, which should look like this:
