@@ -82,8 +82,9 @@ CREATE OR REPLACE WAREHOUSE SPCS_HOL_WH
 CREATE STAGE IF NOT EXISTS specs
 ENCRYPTION = (TYPE='SNOWFLAKE_SSE');
 
-CREATE STAGE IF NOT EXISTS vmounts
-ENCRYPTION = (TYPE='SNOWFLAKE_SSE');
+CREATE STAGE IF NOT EXISTS volumes
+ENCRYPTION = (TYPE='SNOWFLAKE_SSE')
+DIRECTORY = (ENABLE = TRUE);
 ```
 
 Run the following SQL commands in [`01_spcs_setup.sql`](https://github.com/sfc-gh-cbaechtold/spcs-101-quickstart/blob/dev/01_spcs_setup.sql) using the Snowflake VSCode Extension OR in a SQL worksheet to create the [OAuth Security Integration](), our first [compute pool](), and our [image repository]()
@@ -264,10 +265,18 @@ spec:
   containers:
     - name: jupyter-snowpark
       image: <repository_hostname>/spcs_hol_db/public/image_repo/python-jupyter-snowpark:dev
+      volumeMounts:
+        - name: jupyter-home
+          mountPath: /home/jupyter
   endpoints:
     - name: jupyter-snowpark
       port: 8888
       public: true
+  volumes:
+    - name: jupyter-home
+      source: "@volumes/jupyter-snowpark"
+      uid: 1000
+      gid: 1000
   networkPolicyConfig:
       allowInternetEgress: true
 
@@ -298,8 +307,23 @@ Since we specified that the `jupyter-snowpark` endpoint running on port `8888` w
 ```sql
 SHOW ENDPOINTS IN SERVICE JUPYTER_SNOWPARK_SERVICE;
 ```
-Copy the `jupyter-snowpark` endpoint URL, and paste it in your browser. You will be asked to login to Snowflake via your username and password, after which you should successfully see your Jupyterlab instance running, all inside of Snowflake! **Note, to access the service the user logging in must have the `SPCS_USER_ROLE` AND their default role cannot be `ACCOUNTADMIN`, `SECURITYADMIN`, or `ORGADMIN`.**
+Copy the `jupyter-snowpark` endpoint URL, and paste it in your browser. You will be asked to login to Snowflake via your username and password, after which you should successfully see your Jupyter instance running, all inside of Snowflake! **Note, to access the service the user logging in must have the `SPCS_USER_ROLE` AND their default role cannot be `ACCOUNTADMIN`, `SECURITYADMIN`, or `ORGADMIN`.**
 
+### Upload and Modify a Jupyter Notebook
+Notice that in our spec YAML file we mounted the `@volumes/jupyter-snowpark` internal stage location to our `/home/jupyter` directory inside of our running container. What this means is that we will use our internal stage `@volumes` to persist and store artifacts from our container. If you go check out the `@volumes` stage in Snowsight, you'll see that when we created our `jupyter_snowpark_service`, a folder was created in our stage: `@volumes/jupyter-snowpark`
+
+![Stage Volume Mount](./assets/stage_volume_mount.png)
+
+Now, any file that is uploaded to `@volumes/jupyter-snowpark` will be available inside of our container in the `/home/jupyter` directory, and vice versa. To test this out, let's upload the sample Jupyter notebook that is in our source code repo at `.../spcs-101-quickstart/src/jupyter-snowpark/sample_notebook.ipynb`. To do this you can either
+- Click on the `jupyter-snowpark` directory in Snowsight, click the blue `+ Files` button and drag/browse to `sample_notebook.ipynb`. Click Upload. Navigate to your Jupyter service UI in your browser, click the refresh arrow and you should now see your notebook available!
+
+OR
+- Upload `sample_notebook.ipynb` to `@volumes/jupyter-snowpark` using SnowCLI
+
+OR
+- Upload `sample_notebook.ipynb` directly in your Jupyter service  on the home screen by clicking the `Upload` button. If you now navigate back to `@volumes/jupyter-snowpark` in Snowsight, our run an `ls @volumes/jupyter-snowpark` SQL command, you should see  your `sample_notebook.ipynb` file listed. Note you may need to hit the Refresh icon in Snowsight for the file to appear.
+
+What we've done is now created a Jupyter notebook which we can modify in our service, and the changes will be persisted in the file because it is using a stage-backed volume. Let's take a look at the contents of our `sample_notebook.ipynb`. Open up the notebook in your Jupyter service:
 <!-- ------------------------ -->
 ## Build, Push, and Run the Temperature Conversion REST API Service
 Duration: 30
