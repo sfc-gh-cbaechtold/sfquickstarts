@@ -29,7 +29,8 @@ For more information on these objects, check out [this article](https://medium.c
 
 ### What you will learn 
 - The basic mechanics of how Snowpark Container Services works
-- How to deploy a long-running service with a UI
+- How to deploy a long-running service with a UI and use volume mounts to persist changes in the file system
+- How to interact with Snowflake warehouses to run SQL queries from inside of a service
 - How to deploy a Service Function to perform basic calculations
 
 ### Prerequisites
@@ -87,7 +88,7 @@ ENCRYPTION = (TYPE='SNOWFLAKE_SSE')
 DIRECTORY = (ENABLE = TRUE);
 ```
 
-Run the following SQL commands in [`01_spcs_setup.sql`](https://github.com/sfc-gh-cbaechtold/spcs-101-quickstart/blob/dev/01_spcs_setup.sql) using the Snowflake VSCode Extension OR in a SQL worksheet to create the [OAuth Security Integration](), our first [compute pool](), and our [image repository]()
+Run the following SQL commands in [`01_snowpark_container_services_setup.sql`](https://github.com/sfc-gh-cbaechtold/spcs-101-quickstart/blob/dev/01_snowpark_container_services_setup.sql) using the Snowflake VSCode Extension OR in a SQL worksheet to create the [OAuth Security Integration](), our first [compute pool](), and our [image repository]()
 ```SQL
 USE ROLE ACCOUNTADMIN;
 CREATE SECURITY INTEGRATION IF NOT EXISTS snowservices_ingress_oauth
@@ -324,6 +325,33 @@ OR
 - Upload `sample_notebook.ipynb` directly in your Jupyter service  on the home screen by clicking the `Upload` button. If you now navigate back to `@volumes/jupyter-snowpark` in Snowsight, our run an `ls @volumes/jupyter-snowpark` SQL command, you should see  your `sample_notebook.ipynb` file listed. Note you may need to hit the Refresh icon in Snowsight for the file to appear.
 
 What we've done is now created a Jupyter notebook which we can modify in our service, and the changes will be persisted in the file because it is using a stage-backed volume. Let's take a look at the contents of our `sample_notebook.ipynb`. Open up the notebook in your Jupyter service:
+
+![Jupyter Notebook]()
+
+We want to pay special attention to the contents of the `get_login_token()` function:
+```python
+def get_login_token():
+    with open('/snowflake/session/token', 'r') as f:
+        return f.read()
+```
+When you start a service or a job, Snowflake provides credentials to the running containers in the form of an oauth token located at `/snowflake/session/token`, enabling your container code to use Snowflake connectors for connecting to Snowflake and executing SQL (similar to any other code on your computer connecting to Snowflake). The provided credentials authenticate as the service role. Snowflake provides some of the information as environment variables in your containers.
+
+Every object in Snowflake has an owner role. In the case of a service or job, Snowflake has a concept called a service role (this term applies to both services and jobs). The service role determines what capabilities your service is allowed to perform when interacting with Snowflake. This includes executing SQL, accessing stages, and service-to-service networking.
+
+We configure the Snowpark Python Client to connect to our Snowflake account and execute SQL using this oauth token:
+```python
+connection_parameters = {
+    "account": os.getenv('SNOWFLAKE_ACCOUNT'),
+    "host": os.getenv('SNOWFLAKE_HOST'),
+    "token": get_login_token(),
+    "authenticator": "oauth",
+    "database": "SPCS_HOL_DB",
+    "schema": "PUBLIC",
+    "warehouse": "SPCS_HOL_WH"
+}
+```
+
+Now we can run a sample query using our Snowpark session!
 <!-- ------------------------ -->
 ## Build, Push, and Run the Temperature Conversion REST API Service
 Duration: 30
@@ -525,6 +553,33 @@ SET TEMP_F = convert_udf(TEMP_C);
 SELECT * FROM WEATHER;
 ```
 
+### (Optional) Call the Convert Temperature Service Function from our Jupyter Notebook Service
+Open up our previously created Jupyter Notebook service and open up our `sample_notebook.ipynb`. Copy and paste the following code into a new cell at the bottom of the notebook:
+```python
+df = session.table('weather')
+df = df.with_column("TEMP_F_SNOWPARK", F.call_udf('convert_udf', df['TEMP_C']))
+df.show()
+```
+
+Run the cell, and you should see the following output dataframe, with our new column `TEMP_F_SNOWPARK` included:
+```python
+----------------------------------------------------------------------
+|"DATE"      |"LOCATION"   |"TEMP_C"  |"TEMP_F"  |"TEMP_F_SNOWPARK"  |
+----------------------------------------------------------------------
+|2023-03-21  |London       |15        |59        |59.0               |
+|2023-07-13  |Manchester   |20        |68        |68.0               |
+|2023-05-09  |Liverpool    |17        |63        |62.6               |
+|2023-09-17  |Cambridge    |19        |66        |66.2               |
+|2023-11-02  |Oxford       |13        |55        |55.4               |
+|2023-01-25  |Birmingham   |11        |52        |51.8               |
+|2023-08-30  |Newcastle    |21        |70        |69.8               |
+|2023-06-15  |Bristol      |16        |61        |60.8               |
+|2023-04-07  |Leeds        |18        |64        |64.4               |
+|2023-10-23  |Southampton  |12        |54        |53.6               |
+----------------------------------------------------------------------
+```
+
+Now, save the Jupyter notebook- when you come back to this service in the future, your new code will be saved because of our stage-backed volume mount!
 <!-- ------------------------ -->
 ## Managing Services with SQL
 Duration: 5
