@@ -39,7 +39,7 @@ For more information on these objects, check out [this article](https://medium.c
 - [Python 3.10](https://www.python.org/downloads/) installed
     - Note that you will be creating a Python environment with 3.10 in the **Setup the Local Environment** step
 - (Optional) [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) installed
-    >**Download the git repo here: https://github.com/sfc-gh-cbaechtold/spcs-101-quickstart.git**. You can simply doownload the repo as a .zip if you don't have Git installed locally.
+    >**Download the git repo here: https://github.com/sfc-gh-cbaechtold/snowpark-container-services-101-quickstart.git**. You can simply doownload the repo as a .zip if you don't have Git installed locally.
 - (Optional) [VSCode](https://code.visualstudio.com/) (recommended) with the [Docker](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-docker), [Python](https://marketplace.visualstudio.com/items?itemName=ms-python.python), and [Snowflake](https://marketplace.visualstudio.com/items?itemName=snowflake.snowflake-vsc) extensions installed.
 - A Snowflake account in a supported [AWS region](). If you do not have a Snowflake account, you can register for a [free trial account](https://signup.snowflake.com/). **Make sure to select AWS US West as your cloud region for your trial account.**
 - A Snowflake account login with a role that has the `ACCOUNTADMIN` role. If not, you will need to register for a free trial or work with your `ACCOUNTADMIN` to perform the account setup.
@@ -55,27 +55,27 @@ For more information on these objects, check out [this article](https://medium.c
 ## Set up the Snowflake environment
 Duration: 5
 
-Run the following SQL commands in [`00_setup.sql`](https://github.com/sfc-gh-cbaechtold/spcs-101-quickstart/blob/dev/00_setup.sql) using the Snowflake VSCode Extension OR in a SQL worksheet to create the role, database, warehouse, and stage that we need to get started:
+Run the following SQL commands in [`00_setup.sql`](https://github.com/sfc-gh-cbaechtold/snowpark-container-services-101-quickstart/blob/dev/00_setup.sql) using the Snowflake VSCode Extension OR in a SQL worksheet to create the role, database, warehouse, and stage that we need to get started:
 ```SQL
-// Create an SPCS_USER_ROLE with required privileges
+// Create an CONTAINER_USER_ROLE with required privileges
 USE ROLE ACCOUNTADMIN;
-CREATE ROLE SPCS_USER_ROLE;
-GRANT CREATE DATABASE ON ACCOUNT TO ROLE SPCS_USER_ROLE;
-GRANT CREATE WAREHOUSE ON ACCOUNT TO ROLE SPCS_USER_ROLE;
-GRANT CREATE COMPUTE POOL ON ACCOUNT TO ROLE SPCS_USER_ROLE;
-GRANT CREATE INTEGRATION ON ACCOUNT TO ROLE SPCS_USER_ROLE;
-GRANT MONITOR USAGE ON ACCOUNT TO  ROLE  SPCS_USER_ROLE;
-GRANT BIND SERVICE ENDPOINT ON ACCOUNT TO ROLE SPCS_USER_ROLE;
-GRANT IMPORTED PRIVILEGES ON DATABASE snowflake TO ROLE SPCS_USER_ROLE;
+CREATE ROLE CONTAINER_USER_ROLE;
+GRANT CREATE DATABASE ON ACCOUNT TO ROLE CONTAINER_USER_ROLE;
+GRANT CREATE WAREHOUSE ON ACCOUNT TO ROLE CONTAINER_USER_ROLE;
+GRANT CREATE COMPUTE POOL ON ACCOUNT TO ROLE CONTAINER_USER_ROLE;
+GRANT CREATE INTEGRATION ON ACCOUNT TO ROLE CONTAINER_USER_ROLE;
+GRANT MONITOR USAGE ON ACCOUNT TO  ROLE  CONTAINER_USER_ROLE;
+GRANT BIND SERVICE ENDPOINT ON ACCOUNT TO ROLE CONTAINER_USER_ROLE;
+GRANT IMPORTED PRIVILEGES ON DATABASE snowflake TO ROLE CONTAINER_USER_ROLE;
 
-// Grant SPCS_USER_ROLE to ACCOUNTADMIN
-grant role SPCS_USER_ROLE to role ACCOUNTADMIN;
+// Grant CONTAINER_USER_ROLE to ACCOUNTADMIN
+grant role CONTAINER_USER_ROLE to role ACCOUNTADMIN;
 
 // Create Database, Warehouse, and Image spec stage
-USE ROLE SPCS_USER_ROLE;
-CREATE OR REPLACE DATABASE SPCS_HOL_DB;
+USE ROLE CONTAINER_USER_ROLE;
+CREATE OR REPLACE DATABASE CONTAINER_HOL_DB;
 
-CREATE OR REPLACE WAREHOUSE SPCS_HOL_WH
+CREATE OR REPLACE WAREHOUSE CONTAINER_HOL_WH
   WAREHOUSE_SIZE = XSMALL
   AUTO_SUSPEND = 120
   AUTO_RESUME = TRUE;
@@ -88,7 +88,7 @@ ENCRYPTION = (TYPE='SNOWFLAKE_SSE')
 DIRECTORY = (ENABLE = TRUE);
 ```
 
-Run the following SQL commands in [`01_snowpark_container_services_setup.sql`](https://github.com/sfc-gh-cbaechtold/spcs-101-quickstart/blob/dev/01_snowpark_container_services_setup.sql) using the Snowflake VSCode Extension OR in a SQL worksheet to create the [OAuth Security Integration](), our first [compute pool](), and our [image repository]()
+Run the following SQL commands in [`01_snowpark_container_services_setup.sql`](https://github.com/sfc-gh-cbaechtold/snowpark-container-services-101-quickstart/blob/dev/01_snowpark_container_services_setup.sql) using the Snowflake VSCode Extension OR in a SQL worksheet to create the [OAuth Security Integration](), our first [compute pool](), and our [image repository]()
 ```SQL
 USE ROLE ACCOUNTADMIN;
 CREATE SECURITY INTEGRATION IF NOT EXISTS snowservices_ingress_oauth
@@ -96,15 +96,15 @@ CREATE SECURITY INTEGRATION IF NOT EXISTS snowservices_ingress_oauth
   OAUTH_CLIENT=snowservices_ingress
   ENABLED=true;
 
-USE ROLE SPCS_USER_ROLE;
-CREATE COMPUTE POOL IF NOT EXISTS SPCS_HOL_POOL
+USE ROLE CONTAINER_USER_ROLE;
+CREATE COMPUTE POOL IF NOT EXISTS CONTAINER_HOL_POOL
 MIN_NODES = 1
 MAX_NODES = 1
 INSTANCE_FAMILY = standard_1;
 
-CREATE IMAGE REPOSITORY SPCS_HOL_DB.PUBLIC.IMAGE_REPO;
+CREATE IMAGE REPOSITORY CONTAINER_HOL_DB.PUBLIC.IMAGE_REPO;
 
-SHOW IMAGE REPOSITORIES IN SCHEMA SPCS_HOL_DB.PUBLIC;
+SHOW IMAGE REPOSITORIES IN SCHEMA CONTAINER_HOL_DB.PUBLIC;
 ```
 - The OAuth security integration will allow us to login to our UI-based services using our web browser and Snowflake credentials
 - The compute pool is the set of compute resources on which our services will run
@@ -127,7 +127,7 @@ Duration: 10
 
   2. Activate the conda environment.
   ```
-  conda activate spcs-hol
+  conda activate snowpark-container-services-hol
   ```
 
   3. Install hatch so we can build the SnowCLI:
@@ -154,13 +154,13 @@ Duration: 10
   ```
   ```yaml
   # follow the wizard prompts to set the following values:
-  name : spcs_hol
+  name : CONTAINER_hol
   account name: <ORG>-<ACCOUNT-NAME> # e.g. MYORGANIZATION-MYACCOUNT
   username : <user_name>
   password : <password>  
-  role: SPCS_USER_ROLE  
-  warehouse : SPCS_HOL_WH
-  Database : SPCS_HOL_DB  
+  role: CONTAINER_USER_ROLE  
+  warehouse : CONTAINER_HOL_WH
+  Database : CONTAINER_HOL_DB  
   Schema : public  
   connection :   
   port : 
@@ -168,24 +168,24 @@ Duration: 10
   ```
   ```bash
   # test the connection:
-  snow connection test --connection "spcs_hol"
+  snow connection test --connection "CONTAINER_hol"
   ```
 
   6. Start docker via opening Docker Desktop.
   
-  7. Test that we can successfully login to the image repository we created above, `SPCS_HOL_DB.PUBLIC.IMAGE_REPO`. Run the following using Snowflake VSCode Extension or in a SQL worksheet and copy the `repository_url` field, then execute a `docker login` with your registry host and user name from the terminal:
+  7. Test that we can successfully login to the image repository we created above, `CONTAINER_HOL_DB.PUBLIC.IMAGE_REPO`. Run the following using Snowflake VSCode Extension or in a SQL worksheet and copy the `repository_url` field, then execute a `docker login` with your registry host and user name from the terminal:
   ```sql
   // Get the image repository URL
-  use role spcs_user_role;
-  show image repositories in schema SPCS_HOL_DB.PUBLIC;
-  // COPY the repository_url field, e.g. org-account.registry.snowflakecomputing.com/spcs_hol_db/public/image_repo
+  use role CONTAINER_user_role;
+  show image repositories in schema CONTAINER_HOL_DB.PUBLIC;
+  // COPY the repository_url field, e.g. org-account.registry.snowflakecomputing.com/CONTAINER_hol_db/public/image_repo
   ```
   ```bash
-  # e.g. if repository_url = org-account.registry.snowflakecomputing.com/spcs_hol_db/public/image_repo, snowflake_registry_hostname = org-account.registry.snowflakecomputing.com
+  # e.g. if repository_url = org-account.registry.snowflakecomputing.com/CONTAINER_hol_db/public/image_repo, snowflake_registry_hostname = org-account.registry.snowflakecomputing.com
   docker login <snowflake_registry_hostname> -u <user_name>
   > prompt for password
   ```
-  **Note the difference between `REPOSITORY_URL` (`org-account.registry.snowflakecomputing.com/spcs_hol_db/public/image_repo`) and `SNOWFLAKE_REGISTRY_HOSTNAME` (`org-account.registry.snowflakecomputing.com`)**
+  **Note the difference between `REPOSITORY_URL` (`org-account.registry.snowflakecomputing.com/CONTAINER_hol_db/public/image_repo`) and `SNOWFLAKE_REGISTRY_HOSTNAME` (`org-account.registry.snowflakecomputing.com`)**
 
 <!-- ------------------------ -->
 ## Build, Push, and Run the Jupyter Service
@@ -219,9 +219,9 @@ ENTRYPOINT ["jupyter", "notebook","--allow-root","--ip=0.0.0.0","--port=8888","-
 ```
 This is just a normal Dockerfile, where we install some packages, change our working directory, expose a port, and then launch our notebook service. There's nothing unique to Snowpark Container Services here! 
 
-Let's build and test the image locally from the terminal. **Note it is a best practice to tag your local images with a `local_repository` prefix. Often, users will set this to a combination of first initial and last name,, e.g. `jsmith/my-image:latest`. Navigate to your local clone of `.../spcs-101-quickstart/src/jupyter-snowpark` and run a Docker build command:
+Let's build and test the image locally from the terminal. **Note it is a best practice to tag your local images with a `local_repository` prefix. Often, users will set this to a combination of first initial and last name,, e.g. `jsmith/my-image:latest`. Navigate to your local clone of `.../snowpark-container-services-101-quickstart/src/jupyter-snowpark` and run a Docker build command:
 ```bash
-cd .../spcs-101-quickstart/src/jupyter-snowpark
+cd .../snowpark-container-services-101-quickstart/src/jupyter-snowpark
 docker build --platform=linux/amd64 -t <local_repository>/python-jupyter-snowpark:latest .
 ```
 Verify the image built successfully:
@@ -237,12 +237,12 @@ Open up a browser and navigate to [localhost:8888/lab](http://localhost:8888/lab
 ### Tag and Push the Image
 Now that we have a local version of our container working, we need to push it to Snowflake so that a Service can access the image. To do this we will create a new tag of the image that points at our image repository in our Snowflake account, and then push said tagged image. From a terminal, run the following:
 ```bash
-  # e.g. if repository_url = org-account.registry.snowflakecomputing.com/spcs_hol_db/public/image_repo, snowflake_registry_hostname = org-account.registry.snowflakecomputing.com
+  # e.g. if repository_url = org-account.registry.snowflakecomputing.com/CONTAINER_hol_db/public/image_repo, snowflake_registry_hostname = org-account.registry.snowflakecomputing.com
   docker login <snowflake_registry_hostname> -u <user_name>
   > prompt for password
   docker tag <local_repository>/python-jupyter-snowpark:latest <repository_url>/python-jupyter-snowpark:dev
 ```
-**Note the difference between `REPOSITORY_URL` (`org-account.registry.snowflakecomputing.com/spcs_hol_db/public/image_repo`) and `SNOWFLAKE_REGISTRY_HOSTNAME` (`org-account.registry.snowflakecomputing.com`)**
+**Note the difference between `REPOSITORY_URL` (`org-account.registry.snowflakecomputing.com/CONTAINER_hol_db/public/image_repo`) and `SNOWFLAKE_REGISTRY_HOSTNAME` (`org-account.registry.snowflakecomputing.com`)**
 
 Verify that the new tagged image exists by running:
 ```bash
@@ -254,18 +254,18 @@ docker push <repository_url>/python-jupyter-snowpark:dev
 ```
 This may take some time, so you can move on to the next step **Configure and Push the Spec YAML** while the image is being pushed. Once the `docker push` command completes, you can verify that the image exists in your Snowflake Image Repository by running the following SQL using the Snowflake VSCode Extension or SQL worksheet:
 ```sql
-USE ROLE SPCS_USER_ROLE;
-CALL SYSTEM$REGISTRY_LIST_IMAGES('/SPCS_HOL_DB/PUBLIC/IMAGE_REPO');
+USE ROLE CONTAINER_USER_ROLE;
+CALL SYSTEM$REGISTRY_LIST_IMAGES('/CONTAINER_HOL_DB/PUBLIC/IMAGE_REPO');
 ```
 You should see your `python-jupyter-snowpark` image listed.
 
 ### Configure and Push the Spec YAML
-Services in Snowpark Container Services are defined using YAML files. These YAML files configure all of the various parameters, etc. needed to run the containers within your Snowflake account. These YAMLs support a [large number of configurable parameter](), although we will not reference all of them here. Navigate to your local clone of `.../spcs-101-quickstart/src/jupyter-snowpark/jupyter-snowpark.yaml`, which should look like this:
+Services in Snowpark Container Services are defined using YAML files. These YAML files configure all of the various parameters, etc. needed to run the containers within your Snowflake account. These YAMLs support a [large number of configurable parameter](), although we will not reference all of them here. Navigate to your local clone of `.../snowpark-container-services-101-quickstart/src/jupyter-snowpark/jupyter-snowpark.yaml`, which should look like this:
 ```yaml
 spec:
   containers:
     - name: jupyter-snowpark
-      image: <repository_hostname>/spcs_hol_db/public/image_repo/python-jupyter-snowpark:dev
+      image: <repository_hostname>/CONTAINER_hol_db/public/image_repo/python-jupyter-snowpark:dev
       volumeMounts:
         - name: jupyter-home
           mountPath: /home/jupyter
@@ -284,38 +284,38 @@ spec:
 ```
 **Update the <repository_hostname> for your image** and save the file. Now that the spec file is updated, we need to push it to our Snowflake Stage so that we can reference it next in our `create service` statement. We will use snowcli to push the yaml file. From the terminal:
 ```bash
-cd .../spcs-101-quickstart/src/jupyter-snowpark
-snow object stage copy ./jupyter-snowpark.yaml @specs --overwrite --connection spcs_hol
+cd .../snowpark-container-services-101-quickstart/src/jupyter-snowpark
+snow object stage copy ./jupyter-snowpark.yaml @specs --overwrite --connection CONTAINER_hol
 ```
 You can verify that your yaml was pushed successfully by running the following SQL using the Snowflake VSCode Extension or a SQL worksheet and verifying that the file is listed:
 ```sql
-USE ROLE SPCS_USER_ROLE;
-LS @SPCS_HOL_DB.PUBLIC.SPECS;
+USE ROLE CONTAINER_USER_ROLE;
+LS @CONTAINER_HOL_DB.PUBLIC.SPECS;
 ```
 
 ### Create and Test the Service
 Once we have successfully pushed our image and our spec YAML, we have all of the components uploaded to Snowflake that we need in order to create our service. There are three components required to create the service: a service name, a compute pool the service will run on, and the spec file that defines the service. Run the following SQL to create our Jupyter service:
 ```sql
-use role spcs_user_role;
-create service SPCS_HOL_DB.PUBLIC.jupyter_snowpark_service
-    in compute pool SPCS_HOL_POOL
+use role CONTAINER_user_role;
+create service CONTAINER_HOL_DB.PUBLIC.jupyter_snowpark_service
+    in compute pool CONTAINER_HOL_POOL
     from @specs
     spec='jupyter-snowpark.yaml';
 ```
-Run `CALL SYSTEM$GET_SERVICE_STATUS('SPCS_HOL_DB.PUBLIC.JUPYTER_SNOWPARK_SERVICE');` to verify that the service is successfully running. These commands are also spelled out in [`02_jupyter_service.sql`]().
+Run `CALL SYSTEM$GET_SERVICE_STATUS('CONTAINER_HOL_DB.PUBLIC.JUPYTER_SNOWPARK_SERVICE');` to verify that the service is successfully running. These commands are also spelled out in [`02_jupyter_service.sql`]().
 
 Since we specified that the `jupyter-snowpark` endpoint running on port `8888` would be `public: true` in our spec YAML, Snowflake is going to generate a URL for our service that can be used to access the service via our Web Browser. To get the URL, once the service is successfully in a `RUNNING` state, execute the following:
 ```sql
 SHOW ENDPOINTS IN SERVICE JUPYTER_SNOWPARK_SERVICE;
 ```
-Copy the `jupyter-snowpark` endpoint URL, and paste it in your browser. You will be asked to login to Snowflake via your username and password, after which you should successfully see your Jupyter instance running, all inside of Snowflake! **Note, to access the service the user logging in must have the `SPCS_USER_ROLE` AND their default role cannot be `ACCOUNTADMIN`, `SECURITYADMIN`, or `ORGADMIN`.**
+Copy the `jupyter-snowpark` endpoint URL, and paste it in your browser. You will be asked to login to Snowflake via your username and password, after which you should successfully see your Jupyter instance running, all inside of Snowflake! **Note, to access the service the user logging in must have the `CONTAINER_USER_ROLE` AND their default role cannot be `ACCOUNTADMIN`, `SECURITYADMIN`, or `ORGADMIN`.**
 
 ### Upload and Modify a Jupyter Notebook
 Notice that in our spec YAML file we mounted the `@volumes/jupyter-snowpark` internal stage location to our `/home/jupyter` directory inside of our running container. What this means is that we will use our internal stage `@volumes` to persist and store artifacts from our container. If you go check out the `@volumes` stage in Snowsight, you'll see that when we created our `jupyter_snowpark_service`, a folder was created in our stage: `@volumes/jupyter-snowpark`
 
 ![Stage Volume Mount](./assets/stage_volume_mount.png)
 
-Now, any file that is uploaded to `@volumes/jupyter-snowpark` will be available inside of our container in the `/home/jupyter` directory, and vice versa. To test this out, let's upload the sample Jupyter notebook that is in our source code repo at `.../spcs-101-quickstart/src/jupyter-snowpark/sample_notebook.ipynb`. To do this you can either
+Now, any file that is uploaded to `@volumes/jupyter-snowpark` will be available inside of our container in the `/home/jupyter` directory, and vice versa. To test this out, let's upload the sample Jupyter notebook that is in our source code repo at `.../snowpark-container-services-101-quickstart/src/jupyter-snowpark/sample_notebook.ipynb`. To do this you can either
 - Click on the `jupyter-snowpark` directory in Snowsight, click the blue `+ Files` button and drag/browse to `sample_notebook.ipynb`. Click Upload. Navigate to your Jupyter service UI in your browser, click the refresh arrow and you should now see your notebook available!
 
 OR
@@ -345,9 +345,9 @@ connection_parameters = {
     "host": os.getenv('SNOWFLAKE_HOST'),
     "token": get_login_token(),
     "authenticator": "oauth",
-    "database": "SPCS_HOL_DB",
+    "database": "CONTAINER_HOL_DB",
     "schema": "PUBLIC",
-    "warehouse": "SPCS_HOL_WH"
+    "warehouse": "CONTAINER_HOL_WH"
 }
 ```
 
@@ -422,9 +422,9 @@ if __name__ == '__main__':
 
 The only thing unique to Snowflake about this container, is that the REST API code expects to receive requests in the format that [Snowflake External Function](https://docs.snowflake.com/en/sql-reference/external-functions-data-format#body-format) calls are packaged, and must also package the response in the expected format so that we can use it as a Service Function. **Note this is only required if you intend to interact with the API via a SQL function**.
 
-Let's build and test the image locally from the terminal. **Note it is a best practice to tag your local images with a `local_repository` prefix. Often, users will set this to a combination of first initial and last name, e.g. `jsmith/my-image:latest`. Navigate to your local clone of `.../spcs-101-quickstart/src/convert-api` and run a Docker build command:
+Let's build and test the image locally from the terminal. **Note it is a best practice to tag your local images with a `local_repository` prefix. Often, users will set this to a combination of first initial and last name, e.g. `jsmith/my-image:latest`. Navigate to your local clone of `.../snowpark-container-services-101-quickstart/src/convert-api` and run a Docker build command:
 ```bash
-cd .../spcs-101-quickstart/src/convert-api
+cd .../snowpark-container-services-101-quickstart/src/convert-api
 docker build --platform=linux/amd64 -t <local_repository>/convert-api:latest .
 ```
 Verify the image built successfully:
@@ -448,12 +448,12 @@ Once you've verified that the service is working, you can stop the container: `d
 ### Tag and Push the Image
 Now that we have a local version of our container working, we need to push it to Snowflake so that a Service can access the image. To do this we will create a new tag of the image that points at our image repository in our Snowflake account, and then push said tagged image. From a terminal, run the following:
 ```bash
-  # e.g. if repository_url = org-account.registry.snowflakecomputing.com/spcs_hol_db/public/image_repo, snowflake_registry_hostname = org-account.registry.snowflakecomputing.com
+  # e.g. if repository_url = org-account.registry.snowflakecomputing.com/CONTAINER_hol_db/public/image_repo, snowflake_registry_hostname = org-account.registry.snowflakecomputing.com
   docker login <snowflake_registry_hostname> -u <user_name>
   > prompt for password
   docker tag <local_repository>/convert-api:latest <repository_url>/convert-api:dev
 ```
-**Note the difference between `REPOSITORY_URL` (`org-account.registry.snowflakecomputing.com/spcs_hol_db/public/image_repo`) and `SNOWFLAKE_REGISTRY_HOSTNAME` (`org-account.registry.snowflakecomputing.com`)**
+**Note the difference between `REPOSITORY_URL` (`org-account.registry.snowflakecomputing.com/CONTAINER_hol_db/public/image_repo`) and `SNOWFLAKE_REGISTRY_HOSTNAME` (`org-account.registry.snowflakecomputing.com`)**
 
 Verify that the new tagged image exists by running:
 ```bash
@@ -465,18 +465,18 @@ docker push <repository_url>/convert-api:dev
 ```
 This may take some time, so you can move on to the next step **Configure and Push the Spec YAML** while the image is being pushed. Once the `docker push` command completes, you can verify that the image exists in your Snowflake Image Repository by running the following SQL using the Snowflake VSCode Extension or SQL worksheet:
 ```sql
-USE ROLE SPCS_USER_ROLE;
-CALL SYSTEM$REGISTRY_LIST_IMAGES('/SPCS_HOL_DB/PUBLIC/IMAGE_REPO');
+USE ROLE CONTAINER_USER_ROLE;
+CALL SYSTEM$REGISTRY_LIST_IMAGES('/CONTAINER_HOL_DB/PUBLIC/IMAGE_REPO');
 ```
 You should see your `convert-api` image listed.
 
 ### Configure and Push the Spec YAML
-Services in Snowpark Container Services are defined using YAML files. These YAML files configure all of the various parameters, etc. needed to run the containers within your Snowflake account. These YAMLs support a [large number of configurable parameter](), although we will not reference all of them here. Navigate to your local clone of `.../spcs-101-quickstart/src/convert-api/convert-api.yaml`, which should look like this:
+Services in Snowpark Container Services are defined using YAML files. These YAML files configure all of the various parameters, etc. needed to run the containers within your Snowflake account. These YAMLs support a [large number of configurable parameter](), although we will not reference all of them here. Navigate to your local clone of `.../snowpark-container-services-101-quickstart/src/convert-api/convert-api.yaml`, which should look like this:
 ```yaml
 spec:
   containers:
     - name: convert-api
-      image: <repository_hostname>/spcs_hol_db/public/image_repo/convert-api:dev
+      image: <repository_hostname>/CONTAINER_hol_db/public/image_repo/convert-api:dev
   endpoints:
     - name: convert-api
       port: 9090
@@ -484,33 +484,33 @@ spec:
 ```
 **Update the `<repository_hostname>` for your image** and save the file. Now that the spec file is updated, we need to push it to our Snowflake Stage so that we can reference it next in our `create service` statement. We will use snowcli to push the yaml file. From the terminal:
 ```bash
-cd .../spcs-101-quickstart/src/convert-api
-snow object stage copy ./convert-api.yaml @specs --overwrite --connection spcs_hol
+cd .../snowpark-container-services-101-quickstart/src/convert-api
+snow object stage copy ./convert-api.yaml @specs --overwrite --connection CONTAINER_hol
 ```
 You can verify that your yaml was pushed successfully by running the following SQL using the Snowflake VSCode Extension or a SQL worksheet and verifying that the file is listed:
 ```sql
-USE ROLE SPCS_USER_ROLE;
-LS @SPCS_HOL_DB.PUBLIC.SPECS;
+USE ROLE CONTAINER_USER_ROLE;
+LS @CONTAINER_HOL_DB.PUBLIC.SPECS;
 ```
 
 ### Create and Test the Service
 Once we have successfully pushed our image and our spec YAML, we have all of the components uploaded to Snowflake that we need in order to create our service. There are three components required to create the service: a service name, a compute pool the service will run on, and the spec file that defines the service. Run the following SQL to create our Jupyter service:
 ```sql
-use role spcs_user_role;
-create service SPCS_HOL_DB.PUBLIC.convert_api
-    in compute pool SPCS_HOL_POOL
+use role CONTAINER_user_role;
+create service CONTAINER_HOL_DB.PUBLIC.convert_api
+    in compute pool CONTAINER_HOL_POOL
     from @specs
     spec='convert-api.yaml';
 ```
-Run `CALL SYSTEM$GET_SERVICE_STATUS('SPCS_HOL_DB.PUBLIC.CONVERT-API');` to verify that the service is successfully running. These commands are also listed in [`03_rest_service.sql`]()
+Run `CALL SYSTEM$GET_SERVICE_STATUS('CONTAINER_HOL_DB.PUBLIC.CONVERT-API');` to verify that the service is successfully running. These commands are also listed in [`03_rest_service.sql`]()
 
 ### Create and Test the Service Function
 Once the service is up and running, we will create a Service Function that allows us to call our REST API's function via SQL. First, let's create a table with some sample weather data in it:
 ```sql
-USE ROLE SPCS_USER_ROLE;
-USE DATABASE SPCS_HOL_DB;
+USE ROLE CONTAINER_USER_ROLE;
+USE DATABASE CONTAINER_HOL_DB;
 USE SCHEMA PUBLIC;
-USE WAREHOUSE SPCS_HOL_WH;
+USE WAREHOUSE CONTAINER_HOL_WH;
 
 CREATE OR REPLACE TABLE WEATHER (
     DATE DATE,
@@ -591,7 +591,7 @@ There are a number of useful functions we should explore with respect to control
     From a SQl console:
 
     ```sql
-    CALL SYSTEM$GET_SERVICE_STATUS('SPCS_HOL_DB.PUBLIC.JUPYTER_SNOWPARK_SERVICE');
+    CALL SYSTEM$GET_SERVICE_STATUS('CONTAINER_HOL_DB.PUBLIC.JUPYTER_SNOWPARK_SERVICE');
     ```
 
 2. Check the status of the logs with :
@@ -599,7 +599,7 @@ There are a number of useful functions we should explore with respect to control
     From a SQl console:
 
     ```sql
-    CALL SYSTEM$GET_SERVICE_LOGS('SPCS_HOL_DB.PUBLIC.JUPYTER_SNOWPARK_SERVICE', '0', 'jupyter-snowpark',10);
+    CALL SYSTEM$GET_SERVICE_LOGS('CONTAINER_HOL_DB.PUBLIC.JUPYTER_SNOWPARK_SERVICE', '0', 'jupyter-snowpark',10);
     ```
 
 3. Suspend your container using the ALTER SERVICE command
@@ -607,7 +607,7 @@ There are a number of useful functions we should explore with respect to control
     From a SQL console:
 
     ```sql
-    ALTER SERVICE SPCS_HOL_DB.PUBLIC.JUPYTER_SNOWPARK_SERVICE SUSPEND ;
+    ALTER SERVICE CONTAINER_HOL_DB.PUBLIC.JUPYTER_SNOWPARK_SERVICE SUSPEND ;
     ```
 
 4. Resume your container using the ALTER SERVICE command
@@ -615,7 +615,7 @@ There are a number of useful functions we should explore with respect to control
   From a SQL console:
 
   ```sql
-  ALTER SERVICE SPCS_HOL_DB.PUBLIC.JUPYTER_SNOWPARK_SERVICE RESUME ;
+  ALTER SERVICE CONTAINER_HOL_DB.PUBLIC.JUPYTER_SNOWPARK_SERVICE RESUME ;
   ```
 
 <!-- ------------------------ -->
@@ -624,9 +624,9 @@ Duration: 2
 
 If you no longer need the services and compute pool up and running, we can stop the services and suspend the compute pool so that we don't incur any cost (Snowpark Container Services bill credits/second based on the compute pool's uptime, similar to Virtual Warehouse billing):
 ```sql
-USE ROLE SPCS_USER_ROLE;
-ALTER COMPUTE POOL SPCS_HOL_POOL STOP ALL;
-ALTER COMPUTE POOL SPCS_HOL_POOL SUSPEND;
+USE ROLE CONTAINER_USER_ROLE;
+ALTER COMPUTE POOL CONTAINER_HOL_POOL STOP ALL;
+ALTER COMPUTE POOL CONTAINER_HOL_POOL SUSPEND;
 ```
 
 <!-- ------------------------ -->
