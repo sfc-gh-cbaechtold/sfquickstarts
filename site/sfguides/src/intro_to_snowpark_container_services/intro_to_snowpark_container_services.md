@@ -10,14 +10,15 @@ tags: Getting Started, Containers, Snowpark
 # Intro to Snowpark Container Services
 <!-- ------------------------ -->
 ## Overview 
+Duration: 3
 
-Through this quickstart guide, you will explore Snowpark Container Services. You will learn the basic mechanics of working with Snowpark Container Services and build several introductory services. **Please note: this quickstart assumes some existing knowledge and familiarity with containerization (e.g. Docker) and basic familiarity with container orchestration.**
+Through this quickstart guide, you will explore [Snowpark Container Services](https://docs.snowflake.com/en/developer-guide/snowpark-container-services/overview), which are now in Public Preview on AWS. You will learn the basic mechanics of working with Snowpark Container Services and build several introductory services. **Please note: this quickstart assumes some existing knowledge and familiarity with containerization (e.g. Docker) and basic familiarity with container orchestration.**
 
 ### What is Snowpark Container Services?
 
-![Snowpark Container Service](./assets/spcs.webp)
+![Snowpark Container Service](./assets/containers.png)
 
-Snowpark Container Services is a fully managed container offering that allows you to easily deploy, manage, and scale containerized services, jobs, and functions, all within the security and governance boundaries of Snowflake, and requiring zero data movement. As a fully managed service, SPCS comes with Snowflake’s native security, RBAC support, and built-in configuration and operational best-practices.
+[Snowpark Container Services](https://docs.snowflake.com/en/developer-guide/snowpark-container-services/overview) is a fully managed container offering that allows you to easily deploy, manage, and scale containerized services, jobs, and functions, all within the security and governance boundaries of Snowflake, and requiring zero data movement. As a fully managed service, SPCS comes with Snowflake’s native security, RBAC support, and built-in configuration and operational best-practices.
 
 Snowpark Container Services are fully integrated with both Snowflake features and third-party tools, such as Snowflake Virtual Warehouses and Docker, allowing teams to focus on building data applications, and not building or managing infrastructure. Just like all things Snowflake, this managed service allows you to run and scale your container workloads across regions and clouds without the additional complexity of managing a control plane, worker nodes, and also while having quick and easy access to your Snowflake data.
 
@@ -25,7 +26,11 @@ How are customers and partners using Snowpark Container Services today? Containe
 
 The introduction of Snowpark Container Services on Snowflake includes the incorporation of new object types and constructs to the Snowflake platform, namely: images, image registry, image repositories, compute pools, specification files, services, and jobs.
 
-For more information on these objects, check out [this article](https://medium.com/snowflake/snowpark-container-services-a-tech-primer-99ff2ca8e741) along with the Snowpark Container Services [documentation]().
+![Development to Deployment](./assets/spcs_dev_to_deploy.png)
+
+For more information on these objects, check out [this article](https://medium.com/snowflake/snowpark-container-services-a-tech-primer-99ff2ca8e741) along with the Snowpark Container Services [documentation](https://docs.snowflake.com/en/developer-guide/snowpark-container-services/overview).
+
+Note that while in this quickstart, we will predominantly use the direct SQL commands to interact with Snowpark Container Services and their associated objects, there is also [Python API support](https://docs.snowflake.com/developer-guide/snowflake-python-api/snowflake-python-overview) in Public Preview that you can also use. Refer to the [documentation](https://docs.snowflake.com/developer-guide/snowflake-python-api/snowflake-python-overview) for more info.
 
 ### What you will learn 
 - The basic mechanics of how Snowpark Container Services works
@@ -41,7 +46,7 @@ For more information on these objects, check out [this article](https://medium.c
 - (Optional) [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) installed
     >**Download the git repo here: https://github.com/sfc-gh-cbaechtold/snowpark-container-services-101-quickstart.git**. You can simply doownload the repo as a .zip if you don't have Git installed locally.
 - (Optional) [VSCode](https://code.visualstudio.com/) (recommended) with the [Docker](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-docker), [Python](https://marketplace.visualstudio.com/items?itemName=ms-python.python), and [Snowflake](https://marketplace.visualstudio.com/items?itemName=snowflake.snowflake-vsc) extensions installed.
-- A Snowflake account in a supported [AWS region](). If you do not have a Snowflake account, you can register for a [free trial account](https://signup.snowflake.com/). **Make sure to select AWS US West as your cloud region for your trial account.**
+- A Snowflake account in a supported [AWS region](https://docs.snowflake.com/en/developer-guide/snowpark-container-services/overview#available-regions). If you do not have a Snowflake account, you can register for a [free trial account](https://signup.snowflake.com/). **Make sure to select one of the supported AWS regions as your cloud region for your trial account.**
 - A Snowflake account login with a role that has the `ACCOUNTADMIN` role. If not, you will need to register for a free trial or work with your `ACCOUNTADMIN` to perform the account setup.
 
 ### What You’ll Build 
@@ -55,7 +60,7 @@ For more information on these objects, check out [this article](https://medium.c
 ## Set up the Snowflake environment
 Duration: 5
 
-Run the following SQL commands in [`00_setup.sql`](https://github.com/sfc-gh-cbaechtold/snowpark-container-services-101-quickstart/blob/dev/00_setup.sql) using the Snowflake VSCode Extension OR in a SQL worksheet to create the role, database, warehouse, and stage that we need to get started:
+Run the following SQL commands in [`00_setup.sql`](https://github.com/sfc-gh-cbaechtold/snowpark-container-services-101-quickstart/blob/main/00_setup.sql) using the Snowflake VSCode Extension OR in a SQL worksheet to create the role, database, warehouse, and stage that we need to get started:
 ```SQL
 // Create an CONTAINER_USER_ROLE with required privileges
 USE ROLE ACCOUNTADMIN;
@@ -88,7 +93,7 @@ ENCRYPTION = (TYPE='SNOWFLAKE_SSE')
 DIRECTORY = (ENABLE = TRUE);
 ```
 
-Run the following SQL commands in [`01_snowpark_container_services_setup.sql`](https://github.com/sfc-gh-cbaechtold/snowpark-container-services-101-quickstart/blob/dev/01_snowpark_container_services_setup.sql) using the Snowflake VSCode Extension OR in a SQL worksheet to create the [OAuth Security Integration](), our first [compute pool](), and our [image repository]()
+Run the following SQL commands in [`01_snowpark_container_services_setup.sql`](https://github.com/sfc-gh-cbaechtold/snowpark-container-services-101-quickstart/blob/main/01_snowpark_container_services_setup.sql) using the Snowflake VSCode Extension OR in a SQL worksheet to create the [OAuth Security Integration](https://docs.snowflake.com/en/user-guide/oauth-custom#create-a-snowflake-oauth-integration), our first [compute pool](https://docs.snowflake.com/en/developer-guide/snowpark-container-services/working-with-compute-pool), and our [image repository](https://docs.snowflake.com/en/developer-guide/snowpark-container-services/working-with-registry-repository)
 ```SQL
 USE ROLE ACCOUNTADMIN;
 CREATE SECURITY INTEGRATION IF NOT EXISTS snowservices_ingress_oauth
@@ -106,9 +111,9 @@ CREATE IMAGE REPOSITORY CONTAINER_HOL_DB.PUBLIC.IMAGE_REPO;
 
 SHOW IMAGE REPOSITORIES IN SCHEMA CONTAINER_HOL_DB.PUBLIC;
 ```
-- The OAuth security integration will allow us to login to our UI-based services using our web browser and Snowflake credentials
-- The compute pool is the set of compute resources on which our services will run
-- The image repository is the location in Snowflake where we will push our Docker images so that our services can use them
+- The [OAuth security integration](https://docs.snowflake.com/en/user-guide/oauth-custom#create-a-snowflake-oauth-integration) will allow us to login to our UI-based services using our web browser and Snowflake credentials
+- The [compute pool](https://docs.snowflake.com/en/developer-guide/snowpark-container-services/working-with-compute-pool) is the set of compute resources on which our services will run
+- The [image repository](https://docs.snowflake.com/en/developer-guide/snowpark-container-services/working-with-registry-repository) is the location in Snowflake where we will push our Docker images so that our services can use them
 
 <!-- ------------------------ -->
 ## Set up your local environment
@@ -193,7 +198,7 @@ Duration: 45
 
 ### Build and Test the Image Locally
 
-The first service we are going to create is a hosted Jupyter notebook service. First, we will build and test the image locally. In the code repo, there is a [`./src/jupyter-snowpark/dockerfile`]() with the following contents:
+The first service we are going to create is a hosted Jupyter notebook service. First, we will build and test the image locally. In the code repo, there is a [`./src/jupyter-snowpark/dockerfile`](https://github.com/sfc-gh-cbaechtold/snowpark-container-services-101-quickstart/blob/main/src/jupyter-snowpark/dockerfile) with the following contents:
 ```python
 FROM python:3.9
 LABEL author=""
@@ -219,7 +224,7 @@ ENTRYPOINT ["jupyter", "notebook","--allow-root","--ip=0.0.0.0","--port=8888","-
 ```
 This is just a normal Dockerfile, where we install some packages, change our working directory, expose a port, and then launch our notebook service. There's nothing unique to Snowpark Container Services here! 
 
-Let's build and test the image locally from the terminal. **Note it is a best practice to tag your local images with a `local_repository` prefix. Often, users will set this to a combination of first initial and last name,, e.g. `jsmith/my-image:latest`. Navigate to your local clone of `.../snowpark-container-services-101-quickstart/src/jupyter-snowpark` and run a Docker build command:
+Let's build and test the image locally from the terminal. **Note it is a best practice to tag your local images with a `local_repository` prefix.** Often, users will set this to a combination of first initial and last name, e.g. `jsmith/my-image:latest`. Navigate to your local clone of `.../snowpark-container-services-101-quickstart/src/jupyter-snowpark` and run a Docker build command:
 ```bash
 cd .../snowpark-container-services-101-quickstart/src/jupyter-snowpark
 docker build --platform=linux/amd64 -t <local_repository>/python-jupyter-snowpark:latest .
@@ -242,7 +247,7 @@ Now that we have a local version of our container working, we need to push it to
   > prompt for password
   docker tag <local_repository>/python-jupyter-snowpark:latest <repository_url>/python-jupyter-snowpark:dev
 ```
-**Note the difference between `REPOSITORY_URL` (`org-account.registry.snowflakecomputing.com/CONTAINER_hol_db/public/image_repo`) and `SNOWFLAKE_REGISTRY_HOSTNAME` (`org-account.registry.snowflakecomputing.com`)**
+  **Note the difference** between `REPOSITORY_URL` (`org-account.registry.snowflakecomputing.com/CONTAINER_hol_db/public/image_repo`) and `SNOWFLAKE_REGISTRY_HOSTNAME` (`org-account.registry.snowflakecomputing.com`)
 
 Verify that the new tagged image exists by running:
 ```bash
@@ -260,7 +265,7 @@ CALL SYSTEM$REGISTRY_LIST_IMAGES('/CONTAINER_HOL_DB/PUBLIC/IMAGE_REPO');
 You should see your `python-jupyter-snowpark` image listed.
 
 ### Configure and Push the Spec YAML
-Services in Snowpark Container Services are defined using YAML files. These YAML files configure all of the various parameters, etc. needed to run the containers within your Snowflake account. These YAMLs support a [large number of configurable parameter](), although we will not reference all of them here. Navigate to your local clone of `.../snowpark-container-services-101-quickstart/src/jupyter-snowpark/jupyter-snowpark.yaml`, which should look like this:
+Services in Snowpark Container Services are defined using YAML files. These YAML files configure all of the various parameters, etc. needed to run the containers within your Snowflake account. These YAMLs support a [large number of configurable parameter](https://docs.snowflake.com/en/developer-guide/snowpark-container-services/specification-reference), although we will not reference all of them here. Navigate to your local clone of `.../snowpark-container-services-101-quickstart/src/jupyter-snowpark/jupyter-snowpark.yaml`, which should look like this:
 ```yaml
 spec:
   containers:
@@ -302,20 +307,20 @@ create service CONTAINER_HOL_DB.PUBLIC.jupyter_snowpark_service
     from @specs
     spec='jupyter-snowpark.yaml';
 ```
-Run `CALL SYSTEM$GET_SERVICE_STATUS('CONTAINER_HOL_DB.PUBLIC.JUPYTER_SNOWPARK_SERVICE');` to verify that the service is successfully running. These commands are also spelled out in [`02_jupyter_service.sql`]().
+Run `CALL SYSTEM$GET_SERVICE_STATUS('CONTAINER_HOL_DB.PUBLIC.JUPYTER_SNOWPARK_SERVICE');` to verify that the service is successfully running. These commands are also spelled out in [`02_jupyter_service.sql`](https://github.com/sfc-gh-cbaechtold/snowpark-container-services-101-quickstart/blob/main/02_jupyter_service.sql).
 
 Since we specified that the `jupyter-snowpark` endpoint running on port `8888` would be `public: true` in our spec YAML, Snowflake is going to generate a URL for our service that can be used to access the service via our Web Browser. To get the URL, once the service is successfully in a `RUNNING` state, execute the following:
 ```sql
 SHOW ENDPOINTS IN SERVICE JUPYTER_SNOWPARK_SERVICE;
 ```
-Copy the `jupyter-snowpark` endpoint URL, and paste it in your browser. You will be asked to login to Snowflake via your username and password, after which you should successfully see your Jupyter instance running, all inside of Snowflake! **Note, to access the service the user logging in must have the `CONTAINER_USER_ROLE` AND their default role cannot be `ACCOUNTADMIN`, `SECURITYADMIN`, or `ORGADMIN`.**
+Copy the `jupyter-snowpark` endpoint URL, and paste it in your browser. You will be asked to login to Snowflake via your username and password, after which you should successfully see your Jupyter instance running, all inside of Snowflake! **Note, to access the service** the user logging in must have the `CONTAINER_USER_ROLE` AND their default role cannot be `ACCOUNTADMIN`, `SECURITYADMIN`, or `ORGADMIN`.
 
 ### Upload and Modify a Jupyter Notebook
 Notice that in our spec YAML file we mounted the `@volumes/jupyter-snowpark` internal stage location to our `/home/jupyter` directory inside of our running container. What this means is that we will use our internal stage `@volumes` to persist and store artifacts from our container. If you go check out the `@volumes` stage in Snowsight, you'll see that when we created our `jupyter_snowpark_service`, a folder was created in our stage: `@volumes/jupyter-snowpark`
 
 ![Stage Volume Mount](./assets/stage_volume_mount.png)
 
-Now, any file that is uploaded to `@volumes/jupyter-snowpark` will be available inside of our container in the `/home/jupyter` directory, and vice versa. To test this out, let's upload the sample Jupyter notebook that is in our source code repo at `.../snowpark-container-services-101-quickstart/src/jupyter-snowpark/sample_notebook.ipynb`. To do this you can either
+Now, any file that is uploaded to `@volumes/jupyter-snowpark` will be available inside of our container in the `/home/jupyter` directory, and vice versa. Read more about volume mounts in the [documentation](https://docs.snowflake.com/en/developer-guide/snowpark-container-services/specification-reference#spec-volumes-field-optional). To test this out, let's upload the sample Jupyter notebook that is in our source code repo at `.../snowpark-container-services-101-quickstart/src/jupyter-snowpark/sample_notebook.ipynb`. To do this you can either
 - Click on the `jupyter-snowpark` directory in Snowsight, click the blue `+ Files` button and drag/browse to `sample_notebook.ipynb`. Click Upload. Navigate to your Jupyter service UI in your browser, click the refresh arrow and you should now see your notebook available!
 
 OR
@@ -326,7 +331,7 @@ OR
 
 What we've done is now created a Jupyter notebook which we can modify in our service, and the changes will be persisted in the file because it is using a stage-backed volume. Let's take a look at the contents of our `sample_notebook.ipynb`. Open up the notebook in your Jupyter service:
 
-![Jupyter Notebook]()
+![Jupyter Notebook](./assets/jupyter.png)
 
 We want to pay special attention to the contents of the `get_login_token()` function:
 ```python
@@ -334,7 +339,7 @@ def get_login_token():
     with open('/snowflake/session/token', 'r') as f:
         return f.read()
 ```
-When you start a service or a job, Snowflake provides credentials to the running containers in the form of an oauth token located at `/snowflake/session/token`, enabling your container code to use Snowflake connectors for connecting to Snowflake and executing SQL (similar to any other code on your computer connecting to Snowflake). The provided credentials authenticate as the service role. Snowflake provides some of the information as environment variables in your containers.
+When you start a service or a job, Snowflake provides credentials to the running containers in the form of an oauth token located at `/snowflake/session/token`, enabling your container code to use Snowflake connectors for [connecting to Snowflake](https://docs.snowflake.com/en/developer-guide/snowpark-container-services/additional-considerations-services-jobs#connecting-to-snowflake-from-inside-a-container) and executing SQL (similar to any other code on your computer connecting to Snowflake). The provided credentials authenticate as the service role. Snowflake provides some of the information as environment variables in your containers.
 
 Every object in Snowflake has an owner role. In the case of a service or job, Snowflake has a concept called a service role (this term applies to both services and jobs). The service role determines what capabilities your service is allowed to perform when interacting with Snowflake. This includes executing SQL, accessing stages, and service-to-service networking.
 
@@ -352,13 +357,15 @@ connection_parameters = {
 ```
 
 Now we can run a sample query using our Snowpark session!
+
+We've successfully built and deployed our Jupyter Notebook service. Now let's move on to a REST API which we will interact with using a Service Function.
 <!-- ------------------------ -->
 ## Build, Push, and Run the Temperature Conversion REST API Service
 Duration: 30
 
 ### Build and Test the Image Locally
 
-The next service we are going to create is a simple REST API that takes in Celsius temperatures and converts them to Fahrenheit- a trivial example. First, we will build and test the image locally. In the code repo, there is a [`./src/convert-api/dockerfile`]() with the following contents:
+The next service we are going to create is a simple REST API that takes in Celsius temperatures and converts them to Fahrenheit- a trivial example. First, we will build and test the image locally. In the code repo, there is a [`./src/convert-api/dockerfile`](https://github.com/sfc-gh-cbaechtold/snowpark-container-services-101-quickstart/blob/main/src/convert-api/dockerfile) with the following contents:
 ```python
 FROM python:3.11
 
@@ -376,7 +383,7 @@ EXPOSE 9090
 ENV FLASK_APP="convert-app.py"
 CMD ["flask", "run", "--host=0.0.0.0", "--port=9090"]
 ```
-This is just a normal Dockerfile, where we install some packages, change our working directory, expose a port, and then launch our REST API. Our REST API is defined in [`./src/convert-api/convert-app.py`]():
+This is just a normal Dockerfile, where we install some packages, change our working directory, expose a port, and then launch our REST API. Our REST API is defined in [`./src/convert-api/convert-app.py`](https://github.com/sfc-gh-cbaechtold/snowpark-container-services-101-quickstart/blob/main/src/convert-api/convert-app.py):
 ```python
 from flask import Flask, request, jsonify
 
@@ -471,7 +478,7 @@ CALL SYSTEM$REGISTRY_LIST_IMAGES('/CONTAINER_HOL_DB/PUBLIC/IMAGE_REPO');
 You should see your `convert-api` image listed.
 
 ### Configure and Push the Spec YAML
-Services in Snowpark Container Services are defined using YAML files. These YAML files configure all of the various parameters, etc. needed to run the containers within your Snowflake account. These YAMLs support a [large number of configurable parameter](), although we will not reference all of them here. Navigate to your local clone of `.../snowpark-container-services-101-quickstart/src/convert-api/convert-api.yaml`, which should look like this:
+Services in Snowpark Container Services are defined using YAML files. These YAML files configure all of the various parameters, etc. needed to run the containers within your Snowflake account. These YAMLs support a [large number of configurable parameter](https://docs.snowflake.com/en/developer-guide/snowpark-container-services/specification-reference), although we will not reference all of them here. Navigate to your local clone of `.../snowpark-container-services-101-quickstart/src/convert-api/convert-api.yaml`, which should look like this:
 ```yaml
 spec:
   containers:
@@ -502,7 +509,7 @@ create service CONTAINER_HOL_DB.PUBLIC.convert_api
     from @specs
     spec='convert-api.yaml';
 ```
-Run `CALL SYSTEM$GET_SERVICE_STATUS('CONTAINER_HOL_DB.PUBLIC.CONVERT-API');` to verify that the service is successfully running. These commands are also listed in [`03_rest_service.sql`]()
+Run `CALL SYSTEM$GET_SERVICE_STATUS('CONTAINER_HOL_DB.PUBLIC.CONVERT-API');` to verify that the service is successfully running. These commands are also listed in [`03_rest_service.sql`](https://github.com/sfc-gh-cbaechtold/snowpark-container-services-101-quickstart/blob/main/03_rest_service.sql)
 
 ### Create and Test the Service Function
 Once the service is up and running, we will create a Service Function that allows us to call our REST API's function via SQL. First, let's create a table with some sample weather data in it:
@@ -584,7 +591,7 @@ Now, save the Jupyter notebook- when you come back to this service in the future
 ## Managing Services with SQL
 Duration: 5
 
-There are a number of useful functions we should explore with respect to controlling the service itself from SQL. More information on SQL commands can be found at [Snowpark Container Services: Working with Services](https://docs.snowflake.com/en/LIMITEDACCESS/snowpark-containers/working-with-services)
+There are a number of useful functions we should explore with respect to controlling the service itself from SQL. More information on SQL commands can be found at [Snowpark Container Services SQL Commands](https://docs.snowflake.com/en/sql-reference/commands-snowpark-container-services#service) and [Snowpark Container Services System Functions](https://docs.snowflake.com/en/developer-guide/snowpark-container-services/overview#what-s-next)
 
 1. Get the status of your container using CALL $SYSTEM:
 
@@ -636,9 +643,12 @@ Congratulations, you have successfully completed this quickstart! Through this q
 For more information, check out the resources below:
 
 ### Related Resources
-- docs
-- blogs
-- github
-- announcements
+- [Snowpark Container Services Documentation](https://docs.snowflake.com/en/developer-guide/snowpark-container-services/overview)
+- [Snowpark Container Services SQL Commands](https://docs.snowflake.com/en/sql-reference/commands-snowpark-container-services)
+- [Snowpark Container Services - A Tech Primer](https://medium.com/snowflake/snowpark-container-services-a-tech-primer-99ff2ca8e741)
+- [Building Advanced ML with Snowpark Container Services - Summit 2023](https://www.youtube.com/watch?v=DelaJBm0UgI)
+- [Snowpark Container Services with NVIDIA](https://www.youtube.com/watch?v=u98YTgCelYg)
+- [Quickstart GitHub](https://github.com/sfc-gh-cbaechtold/snowpark-container-services-101-quickstart)
+- [Snowflake Announces Snowpark Container Services](https://www.snowflake.com/blog/snowpark-container-services-deploy-genai-full-stack-apps/)
 
 <!-- ------------------------ -->
